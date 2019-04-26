@@ -18,37 +18,23 @@ typedef enum TokenType {
     TOKEN_PARENTHESIS = 2,
 } TokenType;
 
+typedef enum Operator {
+    OPERATOR_PLUS   = 0, // + addition
+    OPERATOR_MINUS  = 1, // - subtraction
+    OPERATOR_TIMES  = 2, // * multiplication
+    OPERATOR_DIVIDE = 3, // / division
+    OPERATOR_EXP    = 4, // ^ exponentiation
+} Operator;
+
+static const char    OPCHARS[]    = { '+', '-', '*', '/', '^' };
+static const uint8_t PRECEDENCE[] = {  0,   0,   1,   1,   2  };
+
 typedef enum Parenthesis {
     PARENTHESIS_OPEN  = 0, // (
     PARENTHESIS_CLOSE = 1, // )
 } Parenthesis;
 
-typedef enum Operator {
-    OPERATOR_PLUS        = 0, // + addition
-    OPERATOR_MINUS       = 1, // - subtraction
-    OPERATOR_TIMES       = 2, // * multiplication
-    OPERATOR_DIVIDE      = 3, // / division
-    OPERATOR_EXP         = 4, // ^ exponentiation
-} Operator;
-
-static int PRECEDENCE[] = {
-    0, // PLUS
-    0, // MINUS
-    1, // TIMES
-    1, // DIVIDE
-    2, // EXP
-};
-
-static int OPCHARS[] = {
-    '+', // PLUS
-    '-', // MINUS
-    '*', // TIMES
-    '/', // DIVIDE
-    '^', // EXP
-};
-
-typedef struct Token Token;
-
+typedef struct Token Token; // declare type before definition to allow self-reference
 struct Token {
     TokenType       type;
     Token          *next; // in queue/stack
@@ -77,6 +63,7 @@ void token_init_parenthesis(Token *token, Parenthesis paren) {
     token->next = NULL;
 }
 
+// prints a textual representation of the token and a space
 void print_token(Token *token) {
     if(token->type == TOKEN_NUMBER) {
         printf("%d ", token->v_number);
@@ -89,7 +76,7 @@ void print_token(Token *token) {
 
 typedef struct TokenQueue {
     Token *head; // first token or null
-    Token *tail; // for efficiency
+    Token *tail; // for efficient operations
 } TokenQueue;
 
 void queue_init(TokenQueue *queue) {
@@ -127,7 +114,7 @@ void queue_dump(TokenQueue *queue) {
 }
 
 typedef struct TokenStack {
-    Token *top;
+    Token *top; // top token or null
 } TokenStack;
 
 void stack_init(TokenStack *stack) {
@@ -152,18 +139,20 @@ Token *stack_pop(TokenStack *stack) {
     return t;
 }
 
+// parses a single character into a token
 void parse_char(Token *t, char c) {
     switch(c) {
-        case '+': token_init_operator(t, OPERATOR_PLUS);   break;
-        case '-': token_init_operator(t, OPERATOR_MINUS);  break;
-        case '*': token_init_operator(t, OPERATOR_TIMES);  break;
-        case '/': token_init_operator(t, OPERATOR_DIVIDE); break;
-        case '^': token_init_operator(t, OPERATOR_EXP);    break;
-        case '(': token_init_parenthesis(t, PARENTHESIS_OPEN);   break;
-        case ')': token_init_parenthesis(t, PARENTHESIS_CLOSE);  break;
+        case '+': token_init_operator(t, OPERATOR_PLUS);        break;
+        case '-': token_init_operator(t, OPERATOR_MINUS);       break;
+        case '*': token_init_operator(t, OPERATOR_TIMES);       break;
+        case '/': token_init_operator(t, OPERATOR_DIVIDE);      break;
+        case '^': token_init_operator(t, OPERATOR_EXP);         break;
+
+        case '(': token_init_parenthesis(t, PARENTHESIS_OPEN);  break;
+        case ')': token_init_parenthesis(t, PARENTHESIS_CLOSE); break;
 
         default:
-            die("Unsupported operator.");
+            die("Unexpected character.");
     }
 }
 
@@ -171,16 +160,20 @@ void read_input(TokenQueue *input, char *c) {
     uint16_t number;
     do {
         if(*c == 0) break;
+
+        // numbers
         if('0' <= *c && *c <= '9') {
             number = 0;
             do {
                 number = number * 10 + (*c - '0');
             } while(*(++c) && '1' <= *c && *c <= '9');
             c--; // woah, move back a little
-            
+
             Token *t = malloc(sizeof(*t));
             token_init_number(t, number);
             queue_insert(input, t);
+
+        // operators, parentheses
         } else {
             Token *t = malloc(sizeof(*t));
             parse_char(t, *c);
@@ -247,7 +240,7 @@ void shunting_yard(TokenQueue *input, TokenQueue *output) {
 }
 
 int main(int argc, char** argv) {
-    if(argc != 2) return 1;
+    if(argc != 2) die("Usage: ./shunt <expression>");
 
     TokenQueue input;
     queue_init(&input);
