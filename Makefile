@@ -1,7 +1,5 @@
-shunt: $(wildcard src/*.c)
-	gcc -o $@ $^
-
-default: shunt
+bin/%: src/%.c
+	gcc -o $@ $<
 
 clean:
-	rm -rf ./shunt
+	rm -rf ./bin/**
