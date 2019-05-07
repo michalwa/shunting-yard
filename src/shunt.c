@@ -6,7 +6,7 @@
 #include "shunting.h"
 
 int main(int argc, char** argv) {
-    if(argc != 2) die("Usage: shunt <expression>");
+    if(argc != 2) die("Usage: %s <expression>\n", argv[0]);
 
     TokenQueue input;
     queue_init(&input);

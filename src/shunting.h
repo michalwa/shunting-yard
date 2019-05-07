@@ -7,9 +7,14 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <stdbool.h>
+#include <stdarg.h>
 
-void die(const char *err) {
-    puts(err);
+// Feeds an error message to fprintf printing to stderr and exits with code 1
+void die(const char *format, ...) {
+    va_list args;
+	va_start(args, format);
+	vfprintf(stderr, format, args);
+	va_end(args);
     exit(1);
 }
 
@@ -170,7 +175,7 @@ void parse_char(Token *t, char c) {
         case ')': token_init_parenthesis(t, PARENTHESIS_CLOSE); break;
 
         default:
-            die("Unexpected character.");
+            die("Unexpected character.\n");
     }
 }
 
@@ -263,7 +268,7 @@ void shunting_yard(TokenQueue *input, TokenQueue *output) {
                 if(stack.top && stack.top->type == TOKEN_PARENTHESIS && stack.top->v_parenthesis == PARENTHESIS_OPEN) {
                     stack_pop(&stack);
                 } else {
-                    die("Unmatched closing parenthesis.");
+                    die("Unmatched closing parenthesis.\n");
                 }
             }
 
@@ -272,7 +277,7 @@ void shunting_yard(TokenQueue *input, TokenQueue *output) {
             stack_push(&stack, t);
 
         } else {
-            die("Unsupported token type.");
+            die("Unsupported token type.\n");
         }
 
         last_read = t;
@@ -281,7 +286,7 @@ void shunting_yard(TokenQueue *input, TokenQueue *output) {
     // pop all remaining operators from the stack to the output queue
     while(t = stack_pop(&stack)) {
         if(t->type == TOKEN_PARENTHESIS && t->v_parenthesis == PARENTHESIS_OPEN) {
-            die("Unmatched opening parenthesis.");
+            die("Unmatched opening parenthesis.\n");
         }
         queue_insert(output, t);
     }

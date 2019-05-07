@@ -6,7 +6,7 @@
 #include "shunting.h"
 
 int main(int argc, char** argv) {
-    if(argc != 2) die("Usage: shunteval <expression>");
+    if(argc != 2) die("Usage: %s <expression>\n", argv[0]);
 
     TokenQueue input;
     queue_init(&input);
@@ -32,7 +32,7 @@ int main(int argc, char** argv) {
         } else if(t->type == TOKEN_OPERATOR) {
             Token *a, *b;
             // remember to first pop b then a
-            if(!(b = stack_pop(&eval_stack)) || !(a = stack_pop(&eval_stack))) die("Stack empty.");
+            if(!(b = stack_pop(&eval_stack)) || !(a = stack_pop(&eval_stack))) die("Stack empty.\n");
 
             long long value;
             switch(t->v_operator) {
@@ -42,7 +42,7 @@ int main(int argc, char** argv) {
                 case OPERATOR_DIVIDE: value = a->v_number / b->v_number;      break;
                 case OPERATOR_EXP:    value = powl(a->v_number, b->v_number); break;
 
-                default: die("Unknown binary operator.");
+                default: die("Unknown binary operator.\n");
             }
 
             new = malloc(sizeof(*new));
@@ -55,7 +55,7 @@ int main(int argc, char** argv) {
             switch(t->v_unary) {
                 case UNARY_MINUS: value = -a->v_number; break;
 
-                default: die("Unknown unary operator.");
+                default: die("Unknown unary operator.\n");
             }
 
             new = malloc(sizeof(*new));
@@ -65,7 +65,7 @@ int main(int argc, char** argv) {
     }
 
     Token *result = stack_pop(&eval_stack);
-    if(eval_stack.top) die("Remaining operands.");
+    if(eval_stack.top) die("Remaining operands.\n");
 
     printf("result: %d\n", result->v_number);
 
